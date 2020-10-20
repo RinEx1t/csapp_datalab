@@ -174,8 +174,13 @@ NOTES:
  *   Rating: 1
  */
 int evenBits(void) {
-  int x = 0x55 << 8 | 0x55;     // The function needs the "01010101....01" return, but we only can use 0x7F in max.
-//                                 Create the "0101 0101"(0x55) and move it with "<<""|" to paste itself.
+
+/*
+ *      The function needs the "01010101....01" return, but we only can use 0x7F in max.
+ *      Create the "0101 0101"(0x55) and move it with "<<""|" to paste itself.
+ */
+
+  int x = 0x55 << 8 | 0x55;
   return x << 16 | x ;
 }
 /* 
@@ -186,8 +191,11 @@ int evenBits(void) {
  *   Rating: 2
  */
 int isEqual(int x, int y) {
-  return !(x ^ y);            // When x == y ,it means that all the bits are the same.
-//                               Considering the character, we could associate it with "^" op. Only when x == y,"^" returns all 0.
+/*
+ *      When x == y ,it means that all the bits are the same.
+ *      Considering the character, we could associate it with "^" op. Only when x == y,"^" returns all 0.
+ */
+  return !(x ^ y);
 }
 /* 
  * byteSwap - swaps the nth byte and the mth byte
@@ -200,12 +208,14 @@ int isEqual(int x, int y) {
  */
 int byteSwap(int x, int n, int m) {
     int bitn = n << 3;
-    int bitm = m << 3;      //  1 byte equals to 8 bits. Since we could only use bits ops, to get the nth,mth byte in bits, I just take it " << 3 ".
-    int y = ( ( x >> bitn ) ^ ( x >> bitm ) ) & 0xFF;  // Push out the exact bytes we want to swap to the lowest byte.
-    //                                                 // In hex, 2 numbers equal to 1 byte. Take the "& 0xFF" to make sure that y only has the swapped byte in the lowest byte.
-    return x ^ ( ( y << bitn ) | ( y << bitm ));    // Realize the Swap function :
-    //                                                 Push the nth,mth byte to the same position with x to correctly operate the "^".
-    //                                                 Principle : a ^ ( a ^ b ) = b ; b ^ ( a ^ b ) = a.
+    int bitm = m << 3;
+    //  1 byte equals to 8 bits. Since we could only use bits ops, to get the nth,mth byte in bits, I just take it " << 3 ".
+    int y = ( ( x >> bitn ) ^ ( x >> bitm ) ) & 0xFF; 
+    //  Push out the exact bytes we want to swap to the lowest byte.
+    //  In hex, 2 numbers equal to 1 byte. Take the "& 0xFF" to make sure that y only has the swapped byte in the lowest byte.
+    return x ^ ( ( y << bitn ) | ( y << bitm ));
+    //  Realize the Swap function : Push the nth,mth byte to the same position with x to correctly operate the "^".
+    //  Principle : a ^ ( a ^ b ) = b ; b ^ ( a ^ b ) = a.
 }
 /* 
  * rotateRight - Rotate x to the right by n
@@ -227,9 +237,12 @@ int rotateRight(int x, int n) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return ~( x | ( ~x + 1) ) >> 31 & 1;  //  Utilize the character of ZERO : It has only one complement code same to origin : " 0x0000...000 ".
-//                                          Other numbers set the sign bit "1" after ( x | ( ~x + 1 ) ) while 0 still remains "0".
-//                                          Push out the sign bit and let it "& 1" to realize the return result.
+/*
+ *    Utilize the character of ZERO : It has only one complement code same to origin : " 0x0000...000 ".
+ *    Other numbers set the sign bit "1" after ( x | ( ~x + 1 ) ) while 0 still remains "0".
+ *    Push out the sign bit and let it "& 1" to realize the return result.
+ */
+  return ~( x | ( ~x + 1) ) >> 31 & 1;
 }
 /* 
  * TMax - return maximum two's complement integer 
@@ -238,8 +251,11 @@ int logicalNeg(int x) {
  *   Rating: 1
  */
 int tmax(void) {
-  return ~(1 << 31);  // Tmax should be 0x7FFFFFFF, which is the opposite number of 0x8000 0000.
-//                       And we cloud easily get 0x8000 0000 by using 1 and "<<" op.
+/*
+ *      Tmax should be 0x7FFFFFFF, which is the opposite number of 0x8000 0000.
+ *      And we cloud easily get 0x8000 0000 by using 1 and "<<" op.
+ */
+  return ~(1 << 31);
 }
 /* 
  * sign - return 1 if positive, 0 if zero, and -1 if negative
@@ -250,8 +266,11 @@ int tmax(void) {
  *  Rating: 2
  */
 int sign(int x) {
-    return ((!!x) | (x >> 31));  // Since the highest bit differs between the positive and the negative,
-//                                  For the negative, we could use it by ">>" and create "-1" (0xFFFF FFFF). By using "!!x", we could get "1" for the postive.(set the bool "1")
+/*
+ *      Since the highest bit differs between the positive and the negative,
+ *      For the negative, we could use it by ">>" and create "-1" (0xFFFF FFFF). By using "!!x", we could get "1" for the postive.(set the bool "1")
+ */
+    return ((!!x) | (x >> 31));
 }
 /* 
  * isGreater - if x > y  then return 1, else return 0 
@@ -261,14 +280,19 @@ int sign(int x) {
  *   Rating: 3
  */
 int isGreater(int x, int y) {
-  int value_sign = !( (x + ~y) >> 31);    // Change the decision from "x > y ?" to "x - y >= 0 ?", it`s easy to judge the sign of this subresult.
+  int value_sign = !( (x + ~y) >> 31);
+  //    Change the decision from "x > y ?" to "x - y >= 0 ?", it`s easy to judge the sign of this subresult.
   x = x >> 31;
-  y = y >> 31;                            // Get the real sign of x,y
-  return ((!x & y) | (value_sign) & (!x | y));    // There are 4 sign conditions of x,y. When x is positive and y is negative, it`s easy to judge by its real sign.
-//                                                   When they are the same sign, it`s easy to judge by the value_sign.
-//                                                   However, when it comes to " x = 0x8000 0000 ", " y = 0x7fff ffff ", 
-//                                                   (x + ~y) gets an overflow error which results in value_sign becoming "1", meaning "x > y".That`s not correct.
-//                                                   To estimate this exceptional case, I attach an (!x | y ) to exclude the case when x is negative while y is positive.
+  y = y >> 31;                            
+  //    Get the real sign of x,y
+  return ((!x & y) | (value_sign) & (!x | y));    
+/*
+ *       There are 4 sign conditions of x,y. When x is positive and y is negative, it`s easy to judge by its real sign.
+ *       When they are the same sign, it`s easy to judge by the value_sign.
+ *       However, when it comes to " x = 0x8000 0000 ", " y = 0x7fff ffff ",
+ *       (x + ~y) gets an overflow error which results in value_sign becoming "1", meaning "x > y".That`s not correct.
+ *       To estimate this exceptional case, I attach an (!x | y ) to exclude the case when x is negative while y is positive.
+ */
 }
 /* 
  * subOK - Determine if can compute x-y without overflow
@@ -279,13 +303,19 @@ int isGreater(int x, int y) {
  *   Rating: 3
  */
 int subOK(int x, int y) {
-  int res = x + (~y + 1);   // Get the result sign of "x-y".
-  int sameSign = x ^ y;     // Overflow only occurs when x is postive while y is negative or the opposite case. We need to judge whether their signs are different.
-  int resSign = res ^ x;    // Judge whether overflow occurs. (If happens, result sign must be the opposite of the minuend.)
-//                             (e.g. Overflow case1 : res(+) when x(-) - y(+) ;  Overflow case2 : res(-) when x(+) - y(-) ).
-  return !((sameSign & resSign) >> 31);  //  Only this two cases happen at the same time that we could tell that overflow occurs.
-//                                           The basis for judgment are the sign. (set the result sign "1" only when the 2 both occurs.)
-//                                           resSign : The result of x(+) - y(+) could be negative without overflow.(The range of the same sign won`t conflict.)
+  int res = x + (~y + 1);   
+  //    Get the result sign of "x-y".
+  int sameSign = x ^ y;     
+  //    Overflow only occurs when x is postive while y is negative or the opposite case. We need to judge whether their signs are different.
+  int resSign = res ^ x;    
+  //    Judge whether overflow occurs. (If happens, result sign must be the opposite of the minuend.)
+  //    (e.g. Overflow case1 : res(+) when x(-) - y(+) ;  Overflow case2 : res(-) when x(+) - y(-) ).
+  return !((sameSign & resSign) >> 31);  
+/*
+ *      Only this two cases happen at the same time that we could tell that overflow occurs.
+ *      The basis for judgment are the sign. (set the result sign "1" only when the 2 both occurs.)
+ *      resSign : The result of x(+) - y(+) could be negative without overflow.(The range of the same sign won`t conflict.)
+ */
 }
 /*
  * satAdd - adds two numbers but when positive overflow occurs, returns
@@ -298,11 +328,16 @@ int subOK(int x, int y) {
  *   Rating: 4
  */
 int satAdd(int x, int y) {
-  int sum = x + y;                                          // Restore this addition result for the following judgement.
-//                                                             Sign of sum has to be same as the inputs otherwise overflow.
-  int overflow = (( sum ^ x ) & ( sum ^ y )) >> 31;         // Get the judgment result of sign to confirm whether overflow occurs.
-//                                                             If so, overflow sets 1. Otherwise, overflow sets 0.
-  return ( sum >> overflow ) ^ ( overflow << 31 );         //  
+  int sum = x + y;
+  //       Restore this addition result for the following judgement. (Sign of sum has to be same as the inputs otherwise overflow.)
+  int overflow = (( sum ^ x ) & ( sum ^ y )) >> 31;         
+  //       Get the judgment result of sign to confirm whether overflow occurs.
+  //       If so, overflow sets all 1. Otherwise, overflow sets 0.
+  return ( sum >> overflow ) ^ ( overflow << 31 );
+/*
+ *
+ * 
+ */
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -317,6 +352,18 @@ int satAdd(int x, int y) {
  *  Rating: 4
  */
 int howManyBits(int x) {
+  
+
+    int n = 0;
+    x = x ^ (x >> 31);
+    n = n + ((!!(x >> (n + 16))) << 4);
+    n = n + ((!!(x >> (n + 8))) << 3);
+    n = n + ((!!(x >> (n + 4))) << 2);
+    n = n + ((!!(x >> (n + 2))) << 1);
+    n = n + ((!!(x >> (n + 1))));
+    n = n + (x >> n);
+    return n + 1;
+
   return 0;
 }
 /*
