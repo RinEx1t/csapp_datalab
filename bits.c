@@ -129,7 +129,6 @@ NOTES:
  *      the correct answers.
  */
 
-
 #endif
 /* Copyright (C) 1991-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
@@ -173,15 +172,16 @@ NOTES:
  *   Max ops: 8
  *   Rating: 1
  */
-int evenBits(void) {
+int evenBits(void)
+{
 
-/*
+  /*
  *      The function needs the "01010101....01" return, but we only can use 0x7F in max.
  *      Create the "0101 0101"(0x55) and move it with "<<""|" to paste itself.
  */
 
   int x = 0x55 << 8 | 0x55;
-  return x << 16 | x ;
+  return x << 16 | x;
 }
 /* 
  * isEqual - return 1 if x == y, and 0 otherwise 
@@ -190,8 +190,9 @@ int evenBits(void) {
  *   Max ops: 5
  *   Rating: 2
  */
-int isEqual(int x, int y) {
-/*
+int isEqual(int x, int y)
+{
+  /*
  *      When x == y ,it means that all the bits are the same.
  *      Considering the character, we could associate it with "^" op. Only when x == y,"^" returns all 0.
  */
@@ -206,16 +207,17 @@ int isEqual(int x, int y) {
  *  Max ops: 25
  *  Rating: 2
  */
-int byteSwap(int x, int n, int m) {
-    int bitn = n << 3;
-    int bitm = m << 3;
-    //  1 byte equals to 8 bits. Since we could only use bits ops, to get the nth,mth byte in bits, I just take it " << 3 ".
-    int y = ( ( x >> bitn ) ^ ( x >> bitm ) ) & 0xFF; 
-    //  Push out the exact bytes we want to swap to the lowest byte.
-    //  In hex, 2 numbers equal to 1 byte. Take the "& 0xFF" to make sure that y only has the swapped byte in the lowest byte.
-    return x ^ ( ( y << bitn ) | ( y << bitm ));
-    //  Realize the Swap function : Push the nth,mth byte to the same position with x to correctly operate the "^".
-    //  Principle : a ^ ( a ^ b ) = b ; b ^ ( a ^ b ) = a.
+int byteSwap(int x, int n, int m)
+{
+  int bitn = n << 3;
+  int bitm = m << 3;
+  //  1 byte equals to 8 bits. Since we could only use bits ops, to get the nth,mth byte in bits, I just take it " << 3 ".
+  int y = ((x >> bitn) ^ (x >> bitm)) & 0xFF;
+  //  Push out the exact bytes we want to swap to the lowest byte.
+  //  In hex, 2 numbers equal to 1 byte. Take the "& 0xFF" to make sure that y only has the swapped byte in the lowest byte.
+  return x ^ ((y << bitn) | (y << bitm));
+  //  Realize the Swap function : Push the nth,mth byte to the same position with x to correctly operate the "^".
+  //  Principle : a ^ ( a ^ b ) = b ; b ^ ( a ^ b ) = a.
 }
 /* 
  * rotateRight - Rotate x to the right by n
@@ -225,8 +227,10 @@ int byteSwap(int x, int n, int m) {
  *   Max ops: 25
  *   Rating: 3 
  */
-int rotateRight(int x, int n) {
-  return 2;
+int rotateRight(int x, int n)
+{
+  return (x >> n) ^ ((x ^ (x >> 31)) << (31 ^ n) << 1);
+  //
 }
 /* 
  * logicalNeg - implement the ! operator, using all of 
@@ -236,13 +240,14 @@ int rotateRight(int x, int n) {
  *   Max ops: 12
  *   Rating: 4 
  */
-int logicalNeg(int x) {
-/*
+int logicalNeg(int x)
+{
+  /*
  *    Utilize the character of ZERO : It has only one complement code same to origin : " 0x0000...000 ".
  *    Other numbers set the sign bit "1" after ( x | ( ~x + 1 ) ) while 0 still remains "0".
- *    Push out the sign bit and let it "& 1" to realize the return result.
+ *    Push out the sign bit and let it "+ 1" to realize the return result.
  */
-  return ~( x | ( ~x + 1) ) >> 31 & 1;
+  return ((x | (~x + 1)) >> 31) + 1;
 }
 /* 
  * TMax - return maximum two's complement integer 
@@ -250,8 +255,9 @@ int logicalNeg(int x) {
  *   Max ops: 4
  *   Rating: 1
  */
-int tmax(void) {
-/*
+int tmax(void)
+{
+  /*
  *      Tmax should be 0x7FFFFFFF, which is the opposite number of 0x8000 0000.
  *      And we cloud easily get 0x8000 0000 by using 1 and "<<" op.
  */
@@ -265,12 +271,13 @@ int tmax(void) {
  *  Max ops: 10
  *  Rating: 2
  */
-int sign(int x) {
-/*
+int sign(int x)
+{
+  /*
  *      Since the highest bit differs between the positive and the negative,
  *      For the negative, we could use it by ">>" and create "-1" (0xFFFF FFFF). By using "!!x", we could get "1" for the postive.(set the bool "1")
  */
-    return ((!!x) | (x >> 31));
+  return ((!!x) | (x >> 31));
 }
 /* 
  * isGreater - if x > y  then return 1, else return 0 
@@ -279,21 +286,33 @@ int sign(int x) {
  *   Max ops: 24
  *   Rating: 3
  */
-int isGreater(int x, int y) {
-  int value_sign = !( (x + ~y) >> 31);
+int isGreater(int x, int y)
+{
+  /*  Version 2.0  ops =4 */
+  //  Solve the overflow problem by expanding x,y to 64 bits.
+  long long m = x;
+  long long n = y;
+  int res = (m + ~n) >> 63;
+  //  Turn " x > y ?" to " x - y >= 0 ?"
+  return res + 1;
+}
+
+/*  Version 1.0  ops = 12 
+
+  int value_sign = !((x + ~y) >> 31);
   //    Change the decision from "x > y ?" to "x - y >= 0 ?", it`s easy to judge the sign of this subresult.
   x = x >> 31;
-  y = y >> 31;                            
+  y = y >> 31;
   //    Get the real sign of x,y
-  return ((!x & y) | (value_sign) & (!x | y));    
-/*
+  return ((!x & y) | (value_sign) & (!x | y));
+  /*
  *       There are 4 sign conditions of x,y. When x is positive and y is negative, it`s easy to judge by its real sign.
  *       When they are the same sign, it`s easy to judge by the value_sign.
  *       However, when it comes to " x = 0x8000 0000 ", " y = 0x7fff ffff ",
  *       (x + ~y) gets an overflow error which results in value_sign becoming "1", meaning "x > y".That`s not correct.
  *       To estimate this exceptional case, I attach an (!x | y ) to exclude the case when x is negative while y is positive.
  */
-}
+
 /* 
  * subOK - Determine if can compute x-y without overflow
  *   Example: subOK(0x80000000,0x80000000) = 1,
@@ -302,16 +321,17 @@ int isGreater(int x, int y) {
  *   Max ops: 20
  *   Rating: 3
  */
-int subOK(int x, int y) {
-  int res = x + (~y + 1);   
+int subOK(int x, int y)
+{
+  int res = x + (~y + 1);
   //    Get the result sign of "x-y".
-  int sameSign = x ^ y;     
+  int sameSign = x ^ y;
   //    Overflow only occurs when x is postive while y is negative or the opposite case. We need to judge whether their signs are different.
-  int resSign = res ^ x;    
+  int resSign = res ^ x;
   //    Judge whether overflow occurs. (If happens, result sign must be the opposite of the minuend.)
   //    (e.g. Overflow case1 : res(+) when x(-) - y(+) ;  Overflow case2 : res(-) when x(+) - y(-) ).
-  return !((sameSign & resSign) >> 31);  
-/*
+  return !((sameSign & resSign) >> 31);
+  /*
  *      Only this two cases happen at the same time that we could tell that overflow occurs.
  *      The basis for judgment are the sign. (set the result sign "1" only when the 2 both occurs.)
  *      resSign : The result of x(+) - y(+) could be negative without overflow.(The range of the same sign won`t conflict.)
@@ -327,14 +347,15 @@ int subOK(int x, int y) {
  *   Max ops: 30
  *   Rating: 4
  */
-int satAdd(int x, int y) {
+int satAdd(int x, int y)
+{
   int sum = x + y;
   //       Restore this addition result for the following judgement. (Sign of sum has to be same as the inputs otherwise overflow.)
-  int overflow = (( sum ^ x ) & ( sum ^ y )) >> 31;         
+  int overflow = ((sum ^ x) & (sum ^ y)) >> 31;
   //       Get the judgment result of sign to confirm whether overflow occurs.
   //       If so, overflow sets all 1. Otherwise, overflow sets 0.
-  return ( sum >> overflow ) ^ ( overflow << 31 );
-/*
+  return (sum >> overflow) ^ (overflow << 31);
+  /*
  *
  * 
  */
@@ -351,20 +372,30 @@ int satAdd(int x, int y) {
  *  Max ops: 90
  *  Rating: 4
  */
-int howManyBits(int x) {
-  
-
-    int n = 0;
-    x = x ^ (x >> 31);
-    n = n + ((!!(x >> (n + 16))) << 4);
-    n = n + ((!!(x >> (n + 8))) << 3);
-    n = n + ((!!(x >> (n + 4))) << 2);
-    n = n + ((!!(x >> (n + 2))) << 1);
-    n = n + ((!!(x >> (n + 1))));
-    n = n + (x >> n);
-    return n + 1;
-
-  return 0;
+int howManyBits(int x)
+{
+  int n = 0;
+  //   n represents the answer of this puzzle.
+  x = x ^ (x >> 31);
+  /*
+ *        x ^ (x >> 31) equals to ( x & ~( x >> 31 )) | ( ~x & ( x >> 31)).
+ *        Firstly we ignore the sign of x. And by getting the sign of x to create 0xFFFF FFFF or 0x0000 0000.
+ *        Now we get all the significant 1 of |x|.
+ *        Afterwards, focus on the msb 1 of x to count howManyBits we need.
+ */
+  //   Using Compromise search
+  n = n + ((!!(x >> (n + 16))) << 4);
+  //   Search whether the msb 1 of x is higher than 16 bits, if so, !!(..) returns 1, 1 << 4 means at least we need 16bits to represent x.
+  //   Otherwise, !!(..) returns 0, and n remains 0.
+  n = n + ((!!(x >> (n + 8))) << 3);
+  //   If n = 16, search whether the msb 1 of x is higher than (16 + 8)bits, if so, so as the above steps.
+  //   If n = 0,  search whether the msb 1 of x is higher that (0 + 8)bits, if so, so as the above steps.
+  n = n + ((!!(x >> (n + 4))) << 2);
+  n = n + ((!!(x >> (n + 2))) << 1);
+  n = n + ((!!(x >> (n + 1))));
+  n = n + (x >> n);
+  return n + 1;
+  //   Add 1 to the final result since we need the MSB to represent the sign.
 }
 /*
  * ilog2 - return floor(log base 2 of x), where x > 0
@@ -373,8 +404,17 @@ int howManyBits(int x) {
  *   Max ops: 90
  *   Rating: 4
  */
-int ilog2(int x) {
-  return 2;
+int ilog2(int x)
+{
+  //   Same as *howManyBits* function
+  int count = 0;
+  //   Using Compromise search
+  count = (!!(x >> 16)) << 4;
+  count = count + ((!!(x >> (8 + count))) << 3);
+  count = count + ((!!(x >> (4 + count))) << 2);
+  count = count + ((!!(x >> (2 + count))) << 1);
+  count = count + ((!!(x >> (1 + count))) << 0);
+  return count;
 }
 /* 
  * float_half - Return bit-level equivalent of expression 0.5*f for
@@ -387,8 +427,31 @@ int ilog2(int x) {
  *   Max ops: 30
  *   Rating: 4
  */
-unsigned float_half(unsigned uf) {
-  return 2;
+unsigned float_half(unsigned uf)
+{
+  unsigned sign = uf & 0x80000000;
+  unsigned uNonSign = uf << 1;
+  //    Store the sign of uf and set other bits all 0.
+  //    uNonSign refers to judging the exp of uf.
+  if (uNonSign >= 0xFF000000) //    NaN/infinity
+    return uf;
+  else if (uNonSign <= 0x01FFFFFF) //    Denormalized
+  {
+    uNonSign >>= 2; //    Set uf`s fraction to the original bits location.
+    switch (uf & 3) //    Round to even
+    {
+    case 3:
+      ++uNonSign;
+      break;
+    default:
+      break;
+    }
+    return sign | uNonSign; //    Set uf`s sign.
+  }
+  else //     Normalized
+  {
+    return uf - 0x800000; //     Make exp-1 (which means - 0x800 000)
+  }
 }
 /* 
  * float_f2i - Return bit-level equivalent of expression (int) f
@@ -402,9 +465,23 @@ unsigned float_half(unsigned uf) {
  *   Max ops: 30
  *   Rating: 4
  */
-int float_f2i(unsigned uf) {
-  // 浮点数转化成整数
-  return 2;
+int float_f2i(unsigned uf)
+{
+  // EVIL TRICK: switch
+  unsigned sign = uf & 0x80000000;
+  unsigned exp = (uf >> 23) & 0xff;
+  unsigned frac = uf & 0x7FFFFF;
+  //    Store uf`s sign, exponent and fraction. Make other bits all 0.
+  if (exp < 127)
+    //    When biased exp < 127, it means that unbiased exp < 0, which turns to int 0.
+    return 0;
+  else if (exp > 158)
+    //    When biased exp > 1111 1110, it means that uf is INF or NaN.
+    return 0x80000000;
+  //    Otherwise, for a normal number.
+  frac = (frac | 0x800000) >> (150 - exp);
+  //    uf`s exp means shift bits of fractions to get its own value.
+  return sign ? -frac : frac;
 }
 /* 
  * float_twice - Return bit-level equivalent of expression 2*f for
@@ -417,6 +494,27 @@ int float_f2i(unsigned uf) {
  *   Max ops: 30
  *   Rating: 4
  */
-unsigned float_twice(unsigned uf) {
-  return 2;
+unsigned float_twice(unsigned uf)
+{
+
+  unsigned sign = uf & 0x80000000;
+  unsigned exp = uf & 0x7f800000;
+  //      Store uf`s sign and exp. Make other bits all 0.
+  if (!exp)
+    //      Uf refers to a subnormal number when exp all 0.
+    return (uf << 1) | sign;
+  //      For subnormal number, just make fraction *2 ( which means << 2 ) and set its original sign.
+  else
+  //      Normal number or Non number.
+  {
+    if (exp == 0x7f000000)
+      //      exp == 1111 1110 so that uf*2 becomes an INF. Set its own sign.
+      return 0x7f800000 | sign;
+    if (exp != 0x7f800000)
+      //      Otherwise, uf is a normal number.
+      uf = uf + 0x800000;
+    //      f*2 just means biased exponent add 1.
+  }
+  return uf;
+  //      When uf itself is NaN or INF, just remain it as the same.
 }
